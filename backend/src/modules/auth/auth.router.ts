@@ -1,7 +1,7 @@
-import { Router } from 'express'
+import { Router, type IRouter } from 'express'
 import { authController } from './auth.controller'
 
-export const authRouter = Router()
+export const authRouter: IRouter = Router()
 
 /**
  * @swagger
@@ -20,7 +20,7 @@ export const authRouter = Router()
  *             properties:
  *               name:
  *                 type: string
- *                 example: Doriane Fosso
+ *                 example: Doriane Keptue
  *               phone:
  *                 type: string
  *                 example: "+237600000000"

@@ -10,7 +10,10 @@ export class AuthController {
       if (!parsed.success) {
         res.status(400).json({
           message: 'Validation failed',
-          errors: parsed.error.flatten().fieldErrors,
+          errors: parsed.error.issues.map(i => ({
+            field: i.path.join('.'),
+            message: i.message,
+          })),
         })
         return
       }
