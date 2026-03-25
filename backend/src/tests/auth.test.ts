@@ -7,7 +7,6 @@ const app = express()
 app.use(express.json())
 app.use('/api/auth', authRouter)
 
-// Mock prisma to avoid real DB calls in unit tests
 vi.mock('../lib/prisma', () => ({
   prisma: {
     user: {
@@ -20,7 +19,16 @@ vi.mock('../lib/prisma', () => ({
   },
 }))
 
+vi.mock('argon2', () => ({
+  default: {
+    hash: vi.fn().mockResolvedValue('hashed_password'),
+    verify: vi.fn(),
+    argon2id: 2,
+  },
+}))
+
 import { prisma } from '../lib/prisma'
+import argon2 from 'argon2'
 
 describe('POST /api/auth/register', () => {
   beforeEach(() => {
@@ -110,5 +118,76 @@ describe('POST /api/auth/register', () => {
 
     expect(res.status).toBe(404)
     expect(res.body.message).toBe('City not found')
+  })
+})
+
+describe('POST /api/auth/login', () => {
+  const mockUser = {
+    id: 'user-uuid',
+    name: 'Doriane',
+    phone: '+237600000000',
+    email: null,
+    passwordHash: 'hashed_password',
+    role: 'CITIZEN',
+    cityId: 'city-uuid',
+    createdAt: new Date(),
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('should login successfully and return a JWT token', async () => {
+    vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser as any)
+    vi.mocked(argon2.verify).mockResolvedValue(true)
+
+    const res = await request(app)
+      .post('/api/auth/login')
+      .send({
+        phone: '+237600000000',
+        password: 'SecurePass123!',
+      })
+
+    expect(res.status).toBe(200)
+    expect(res.body.token).toBeDefined()
+    expect(res.body.user.phone).toBe('+237600000000')
+    expect(res.body.user.passwordHash).toBeUndefined()
+  })
+
+  it('should return 401 if phone number does not exist', async () => {
+    vi.mocked(prisma.user.findUnique).mockResolvedValue(null)
+
+    const res = await request(app)
+      .post('/api/auth/login')
+      .send({
+        phone: '+237600000000',
+        password: 'SecurePass123!',
+      })
+
+    expect(res.status).toBe(401)
+    expect(res.body.message).toBe('Invalid credentials')
+  })
+
+  it('should return 401 if password is incorrect', async () => {
+    vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser as any)
+    vi.mocked(argon2.verify).mockResolvedValue(false)
+
+    const res = await request(app)
+      .post('/api/auth/login')
+      .send({
+        phone: '+237600000000',
+        password: 'WrongPassword1!',
+      })
+
+    expect(res.status).toBe(401)
+    expect(res.body.message).toBe('Invalid credentials')
+  })
+
+  it('should return 400 if required fields are missing', async () => {
+    const res = await request(app)
+      .post('/api/auth/login')
+      .send({ phone: '+237600000000' }) // missing password
+
+    expect(res.status).toBe(400)
   })
 })

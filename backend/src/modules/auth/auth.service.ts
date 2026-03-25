@@ -1,7 +1,7 @@
 import argon2 from 'argon2'
 import jwt from 'jsonwebtoken'
 import { prisma } from '../../lib/prisma'
-import type { RegisterInput } from './auth.schema'
+import type { RegisterInput, LoginInput } from './auth.schema'
 
 export class AuthService {
   async register(input: RegisterInput) {
@@ -55,6 +55,36 @@ export class AuthService {
     )
 
     return { user, token }
+  }
+
+  async login(input: LoginInput) {
+    // 1. Find user by phone
+    const user = await prisma.user.findUnique({
+      where: { phone: input.phone },
+    })
+
+    // 2. Generic error — never reveal if phone exists or not (security)
+    if (!user) {
+      throw { status: 401, message: 'Invalid credentials' }
+    }
+
+    // 3. Verify password
+    const isValid = await argon2.verify(user.passwordHash, input.password)
+    if (!isValid) {
+      throw { status: 401, message: 'Invalid credentials' }
+    }
+
+    // 4. Generate JWT
+    const token = jwt.sign(
+      { userId: user.id, role: user.role },
+      process.env['JWT_SECRET'] as string,
+      { expiresIn: '24h' }
+    )
+
+    // 5. Return user without passwordHash
+    const { passwordHash: _, ...safeUser } = user
+
+    return { user: safeUser, token }
   }
 }
 
