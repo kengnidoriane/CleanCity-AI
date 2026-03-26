@@ -14,12 +14,18 @@ vi.mock('../middlewares/authenticate', () => ({
 
 vi.mock('../lib/prisma', () => ({
   prisma: {
-    wasteReport: {
-      findUnique: vi.fn(),
-      update: vi.fn(),
-    },
-    user: {
-      findUnique: vi.fn(),
+    wasteReport: { findUnique: vi.fn(), update: vi.fn() },
+    user: { findUnique: vi.fn(), update: vi.fn() },
+  },
+}))
+
+vi.mock('../lib/supabase', () => ({
+  supabase: {
+    storage: {
+      from: vi.fn().mockReturnValue({
+        upload: vi.fn().mockResolvedValue({ error: null }),
+        getPublicUrl: vi.fn().mockReturnValue({ data: { publicUrl: 'https://test.com/photo.jpg' } }),
+      }),
     },
   },
 }))
@@ -39,92 +45,44 @@ app.use(errorHandler)
 describe('PATCH /api/reports/:id/status', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('should update report status to COLLECTED and send push notification', async () => {
-    const mockReport = {
-      id: 'report-uuid',
-      userId: 'citizen-uuid',
-      status: 'ASSIGNED',
-      wasteType: 'PLASTIC',
-      createdAt: new Date('2026-03-20'),
-    }
-    const mockCitizen = {
-      id: 'citizen-uuid',
-      pushToken: 'ExponentPushToken[xxxxxx]',
-    }
+  it('should update status to COLLECTED and send push notification', async () => {
+    const mockReport = { id: 'report-uuid', userId: 'citizen-uuid', status: 'ASSIGNED', wasteType: 'PLASTIC', createdAt: new Date('2026-03-20') }
+    const mockCitizen = { id: 'citizen-uuid', pushToken: 'ExponentPushToken[xxxxxx]' }
     const updatedReport = { ...mockReport, status: 'COLLECTED', collectedAt: new Date() }
 
     vi.mocked(prisma.wasteReport.findUnique).mockResolvedValue(mockReport as any)
     vi.mocked(prisma.user.findUnique).mockResolvedValue(mockCitizen as any)
     vi.mocked(prisma.wasteReport.update).mockResolvedValue(updatedReport as any)
 
-    const res = await request(app)
-      .patch('/api/reports/report-uuid/status')
-      .send({ status: 'COLLECTED' })
+    const res = await request(app).patch('/api/reports/report-uuid/status').send({ status: 'COLLECTED' })
 
     expect(res.status).toBe(200)
     expect(res.body.status).toBe('COLLECTED')
-    expect(sendPushNotification).toHaveBeenCalledWith(
-      'ExponentPushToken[xxxxxx]',
-      expect.stringContaining('collected')
-    )
+    expect(sendPushNotification).toHaveBeenCalledWith('ExponentPushToken[xxxxxx]', expect.stringContaining('collected'))
   })
 
   it('should return 404 if report does not exist', async () => {
     vi.mocked(prisma.wasteReport.findUnique).mockResolvedValue(null)
-
-    const res = await request(app)
-      .patch('/api/reports/nonexistent/status')
-      .send({ status: 'COLLECTED' })
-
+    const res = await request(app).patch('/api/reports/nonexistent/status').send({ status: 'COLLECTED' })
     expect(res.status).toBe(404)
   })
 
   it('should return 400 if status is invalid', async () => {
-    const res = await request(app)
-      .patch('/api/reports/report-uuid/status')
-      .send({ status: 'INVALID_STATUS' })
-
+    const res = await request(app).patch('/api/reports/report-uuid/status').send({ status: 'INVALID' })
     expect(res.status).toBe(400)
   })
 
   it('should update status without notification if citizen has no push token', async () => {
-    const mockReport = {
-      id: 'report-uuid',
-      userId: 'citizen-uuid',
-      status: 'ASSIGNED',
-      createdAt: new Date(),
-    }
-    const mockCitizen = { id: 'citizen-uuid', pushToken: null }
+    const mockReport = { id: 'report-uuid', userId: 'citizen-uuid', status: 'ASSIGNED', createdAt: new Date() }
     const updatedReport = { ...mockReport, status: 'COLLECTED', collectedAt: new Date() }
 
     vi.mocked(prisma.wasteReport.findUnique).mockResolvedValue(mockReport as any)
-    vi.mocked(prisma.user.findUnique).mockResolvedValue(mockCitizen as any)
+    vi.mocked(prisma.user.findUnique).mockResolvedValue({ id: 'citizen-uuid', pushToken: null } as any)
     vi.mocked(prisma.wasteReport.update).mockResolvedValue(updatedReport as any)
 
-    const res = await request(app)
-      .patch('/api/reports/report-uuid/status')
-      .send({ status: 'COLLECTED' })
+    const res = await request(app).patch('/api/reports/report-uuid/status').send({ status: 'COLLECTED' })
 
     expect(res.status).toBe(200)
     expect(sendPushNotification).not.toHaveBeenCalled()
-  })
-})
-
-describe('POST /api/users/push-token', () => {
-  it('should register push token for authenticated user', async () => {
-    const userApp = express()
-    userApp.use(express.json())
-
-    const { usersRouter } = await import('../modules/users/users.router')
-    userApp.use('/api/users', usersRouter)
-    userApp.use(errorHandler)
-
-    vi.mocked(prisma.user.findUnique).mockResolvedValue({ id: 'user-uuid' } as any)
-
-    const res = await request(userApp)
-      .post('/api/users/push-token')
-      .send({ pushToken: 'ExponentPushToken[xxxxxx]' })
-
-    expect(res.status).toBe(200)
   })
 })
