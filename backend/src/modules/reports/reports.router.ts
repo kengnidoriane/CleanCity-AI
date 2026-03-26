@@ -116,3 +116,43 @@ reportsRouter.get(
   requireRole('CITIZEN'),
   (req, res, next) => reportsController.getById(req, res, next)
 )
+
+/**
+ * @swagger
+ * /api/reports/{id}/status:
+ *   patch:
+ *     summary: Update report status (driver marks as collected)
+ *     tags: [Reports]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [status]
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [ASSIGNED, COLLECTED]
+ *     responses:
+ *       200:
+ *         description: Status updated, push notification sent to citizen
+ *       400:
+ *         description: Invalid status
+ *       404:
+ *         description: Report not found
+ */
+reportsRouter.patch(
+  '/:id/status',
+  authenticate,
+  requireRole('COMPANY'),
+  (req, res, next) => reportsController.updateStatus(req, res, next)
+)

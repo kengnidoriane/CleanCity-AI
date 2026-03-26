@@ -1,6 +1,7 @@
 import { prisma } from '../../lib/prisma'
 import { supabase } from '../../lib/supabase'
-import type { CreateReportInput } from './reports.schema'
+import { sendPushNotification } from '../../lib/notifications'
+import type { CreateReportInput, UpdateStatusInput } from './reports.schema'
 
 export class ReportsService {
   async create(input: CreateReportInput, userId: string, photo?: Express.Multer.File) {
@@ -50,6 +51,38 @@ export class ReportsService {
     if (!report) throw { status: 404, message: 'Report not found' }
     if (report.userId !== userId) throw { status: 403, message: 'Forbidden' }
     return report
+  }
+
+  async updateStatus(id: string, input: UpdateStatusInput) {
+    const report = await prisma.wasteReport.findUnique({ where: { id } })
+    if (!report) throw { status: 404, message: 'Report not found' }
+
+    const updated = await prisma.wasteReport.update({
+      where: { id },
+      data: {
+        status: input.status,
+        collectedAt: input.status === 'COLLECTED' ? new Date() : undefined,
+      },
+    })
+
+    // Send push notification to citizen when waste is collected
+    if (input.status === 'COLLECTED') {
+      const citizen = await prisma.user.findUnique({
+        where: { id: report.userId },
+        select: { pushToken: true },
+      })
+
+      if (citizen?.pushToken) {
+        const date = report.createdAt.toLocaleDateString('en-GB')
+        // Fire and forget — notification failure must not block the status update
+        sendPushNotification(
+          citizen.pushToken,
+          `Your waste report from ${date} has been collected. Thank you!`
+        ).catch(err => console.error('Push notification failed:', err))
+      }
+    }
+
+    return updated
   }
 }
 

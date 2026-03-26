@@ -18,3 +18,9 @@ export const createReportSchema = z.object({
 })
 
 export type CreateReportInput = z.infer<typeof createReportSchema>
+
+export const updateStatusSchema = z.object({
+  status: z.enum(['ASSIGNED', 'COLLECTED'], { error: 'Status must be ASSIGNED or COLLECTED' }),
+})
+
+export type UpdateStatusInput = z.infer<typeof updateStatusSchema>

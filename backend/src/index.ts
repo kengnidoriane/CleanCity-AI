@@ -7,6 +7,8 @@ import { Server } from 'socket.io'
 import swaggerUi from 'swagger-ui-express'
 import { swaggerSpec } from './config/swagger'
 import { authRouter } from './modules/auth/auth.router'
+import { reportsRouter } from './modules/reports/reports.router'
+import { usersRouter } from './modules/users/users.router'
 import { errorHandler } from './middlewares/errorHandler'
 
 dotenv.config()
@@ -33,7 +35,8 @@ app.get('/health', (_req, res) => {
 
 // Routes
 app.use('/api/auth', authRouter)
-// app.use('/api/reports', reportRouter)
+app.use('/api/reports', reportsRouter)
+app.use('/api/users', usersRouter)
 // app.use('/api/routes', routeRouter)
 // app.use('/api/trucks', truckRouter)
 // app.use('/api/analytics', analyticsRouter)
