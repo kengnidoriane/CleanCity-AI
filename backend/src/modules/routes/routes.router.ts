@@ -120,3 +120,38 @@ routesRouter.get(
   authenticate,
   (req, res, next) => routesController.getById(req, res, next)
 )
+
+/**
+ * @swagger
+ * /api/routes/{id}/stops/{stopIndex}/complete:
+ *   patch:
+ *     summary: Mark a stop as collected (driver marks collection complete)
+ *     tags: [Routes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: stopIndex
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Zero-based index of the stop in the route
+ *     responses:
+ *       200:
+ *         description: Stop marked as collected, completion percent updated
+ *       400:
+ *         description: Stop index out of range
+ *       404:
+ *         description: Route not found
+ */
+routesRouter.patch(
+  '/:id/stops/:stopIndex/complete',
+  authenticate,
+  requireRole('COMPANY'),
+  (req, res, next) => routesController.completeStop(req, res, next)
+)

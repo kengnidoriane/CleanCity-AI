@@ -45,6 +45,22 @@ export class RoutesController {
     }
   }
 
+  async completeStop(req: Request, res: Response, next: NextFunction) {
+    try {
+      const stopIndex = parseInt(req.params['stopIndex'] as string, 10)
+      if (isNaN(stopIndex)) {
+        res.status(400).json({ message: 'Stop index must be a number' })
+        return
+      }
+
+      const result = await routesService.completeStop(req.params['id'] as string, stopIndex)
+      res.status(200).json(result)
+    } catch (err: any) {
+      if (err.status) { res.status(err.status).json({ message: err.message }); return }
+      next(err)
+    }
+  }
+
   async getById(req: Request, res: Response, next: NextFunction) {
     try {
       const route = await routesService.findById(req.params['id'] as string)
