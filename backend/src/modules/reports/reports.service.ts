@@ -39,8 +39,65 @@ export class ReportsService {
     return report
   }
 
-  async findByCity(cityId: string, filters: {
+  async getAuditTrail(cityId: string, filters: {
     status?: string
+    companyId?: string
+    page?: number
+    limit?: number
+  }) {
+    const page = filters.page ?? 1
+    const limit = filters.limit ?? 50
+    const skip = (page - 1) * limit
+
+    const where = {
+      cityId,
+      ...(filters.status && { status: filters.status as any }),
+      ...(filters.companyId && { companyId: filters.companyId }),
+    }
+
+    const [data, total] = await Promise.all([
+      prisma.wasteReport.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.wasteReport.count({ where }),
+    ])
+
+    return { data, total, page, limit }
+  }
+
+  async exportAuditCsv(cityId: string, filters: { status?: string; companyId?: string }) {
+    const where = {
+      cityId,
+      ...(filters.status && { status: filters.status as any }),
+      ...(filters.companyId && { companyId: filters.companyId }),
+    }
+
+    const reports = await prisma.wasteReport.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+    })
+
+    const header = 'id,date,location,wasteType,severity,status,company,collectedAt'
+    const rows = reports.map(r =>
+      [
+        r.id,
+        r.createdAt.toISOString(),
+        `${r.latitude};${r.longitude}`,
+        r.wasteType,
+        r.severity,
+        r.status,
+        r.companyId ?? '',
+        r.collectedAt?.toISOString() ?? '',
+      ].join(',')
+    )
+
+    return [header, ...rows].join('\n')
+  }
+
+  async findByCity(cityId: string, filters: {    status?: string
     wasteType?: string
     severity?: string
   }) {

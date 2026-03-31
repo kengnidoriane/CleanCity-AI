@@ -32,6 +32,38 @@ export class ReportsController {
     }
   }
 
+  async getAuditTrail(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { cityId, status, companyId, page, limit } = req.query as Record<string, string>
+      if (!cityId) {
+        res.status(400).json({ message: 'cityId is required' })
+        return
+      }
+      const result = await reportsService.getAuditTrail(cityId, {
+        status,
+        companyId,
+        page: page ? parseInt(page) : undefined,
+        limit: limit ? parseInt(limit) : undefined,
+      })
+      res.status(200).json(result)
+    } catch (err) { next(err) }
+  }
+
+  async exportAuditCsv(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { cityId, status, companyId } = req.query as Record<string, string>
+      if (!cityId) {
+        res.status(400).json({ message: 'cityId is required' })
+        return
+      }
+      const csv = await reportsService.exportAuditCsv(cityId, { status, companyId })
+      const filename = `audit-${cityId}-${new Date().toISOString().split('T')[0]}.csv`
+      res.setHeader('Content-Type', 'text/csv')
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
+      res.status(200).send(csv)
+    } catch (err) { next(err) }
+  }
+
   async getByCity(req: Request, res: Response, next: NextFunction) {
     try {
       const { cityId, status, wasteType, severity } = req.query as Record<string, string>

@@ -90,6 +90,86 @@ reportsRouter.get(
 
 /**
  * @swagger
+ * /api/reports/audit/export:
+ *   get:
+ *     summary: Export audit trail as CSV (municipal only)
+ *     tags: [Reports]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: cityId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: companyId
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: CSV file download
+ *         content:
+ *           text/csv:
+ *             schema:
+ *               type: string
+ */
+reportsRouter.get(
+  '/audit/export',
+  authenticate,
+  requireRole('MUNICIPAL'),
+  (req, res, next) => reportsController.exportAuditCsv(req, res, next)
+)
+
+/**
+ * @swagger
+ * /api/reports/audit:
+ *   get:
+ *     summary: Get paginated audit trail with filters (municipal only)
+ *     tags: [Reports]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: cityId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: companyId
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Paginated list of reports with total count
+ *       400:
+ *         description: cityId is required
+ */
+reportsRouter.get(
+  '/audit',
+  authenticate,
+  requireRole('MUNICIPAL'),
+  (req, res, next) => reportsController.getAuditTrail(req, res, next)
+)
+
+/**
+ * @swagger
  * /api/reports/city:
  *   get:
  *     summary: Get all reports for a city with optional filters (company/municipal dashboard)
