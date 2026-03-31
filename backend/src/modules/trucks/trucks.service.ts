@@ -2,9 +2,21 @@ import { prisma } from '../../lib/prisma'
 import { getIO } from '../../lib/socket'
 import type { UpdatePositionInput } from './trucks.schema'
 
+const AVERAGE_SPEED_KMH = 30 // Average truck speed in urban Africa
+
+/**
+ * Calculate ETA to next stop in minutes.
+ * Based on remaining route distance and average urban speed.
+ */
+function calculateEta(totalDistanceKm: number | null, completionPercent: number): number | null {
+  if (totalDistanceKm === null || totalDistanceKm === 0) return null
+  const remainingKm = totalDistanceKm * (1 - completionPercent / 100)
+  return Math.round((remainingKm / AVERAGE_SPEED_KMH) * 60)
+}
+
 export class TrucksService {
   async getActiveTrucks(cityId: string) {
-    return prisma.truck.findMany({
+    const trucks = await prisma.truck.findMany({
       where: {
         isActive: true,
         company: { cityId },
@@ -24,6 +36,25 @@ export class TrucksService {
         },
       },
     })
+
+    // Enrich each truck with ETA from its active route
+    const trucksWithEta = await Promise.all(
+      trucks.map(async (truck) => {
+        let etaMinutes: number | null = null
+
+        if (truck.activeRouteId) {
+          const route = await prisma.collectionRoute.findUnique({
+            where: { id: truck.activeRouteId },
+            select: { totalDistanceKm: true },
+          })
+          etaMinutes = calculateEta(route?.totalDistanceKm ?? null, truck.completionPercent)
+        }
+
+        return { ...truck, etaMinutes }
+      })
+    )
+
+    return trucksWithEta
   }
 
   async updatePosition(truckId: string, input: UpdatePositionInput) {

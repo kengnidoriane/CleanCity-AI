@@ -21,6 +21,9 @@ vi.mock('../lib/prisma', () => ({
       findUnique: vi.fn(),
       update: vi.fn(),
     },
+    collectionRoute: {
+      findUnique: vi.fn(),
+    },
   },
 }))
 
@@ -47,8 +50,9 @@ const mockTruck = {
 describe('GET /api/trucks/active', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('should return all active trucks for a city', async () => {
+  it('should return active trucks with null ETA when no active route', async () => {
     vi.mocked(prisma.truck.findMany).mockResolvedValue([mockTruck] as any)
+    vi.mocked(prisma.collectionRoute.findUnique).mockResolvedValue(null)
 
     const res = await request(app)
       .get('/api/trucks/active')
@@ -58,6 +62,21 @@ describe('GET /api/trucks/active', () => {
     expect(res.body).toHaveLength(1)
     expect(res.body[0].isActive).toBe(true)
     expect(res.body[0].currentLat).toBe(14.6928)
+    expect(res.body[0].etaMinutes).toBeNull()
+  })
+
+  it('should return ETA when truck has an active route', async () => {
+    const truckWithRoute = { ...mockTruck, activeRouteId: 'route-uuid', completionPercent: 50 }
+    vi.mocked(prisma.truck.findMany).mockResolvedValue([truckWithRoute] as any)
+    vi.mocked(prisma.collectionRoute.findUnique).mockResolvedValue({ totalDistanceKm: 10 } as any)
+
+    const res = await request(app)
+      .get('/api/trucks/active')
+      .query({ cityId: CITY_ID })
+
+    expect(res.status).toBe(200)
+    // 10km total, 50% done = 5km remaining at 30km/h = 10 minutes
+    expect(res.body[0].etaMinutes).toBe(10)
   })
 
   it('should return 400 if cityId is missing', async () => {
