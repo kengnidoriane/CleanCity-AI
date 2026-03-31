@@ -90,6 +90,47 @@ reportsRouter.get(
 
 /**
  * @swagger
+ * /api/reports/city:
+ *   get:
+ *     summary: Get all reports for a city with optional filters (company/municipal dashboard)
+ *     tags: [Reports]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: cityId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [PENDING, ASSIGNED, COLLECTED]
+ *       - in: query
+ *         name: wasteType
+ *         schema:
+ *           type: string
+ *           enum: [PLASTIC, ORGANIC, BULKY, ELECTRONIC, HAZARDOUS, OTHER]
+ *       - in: query
+ *         name: severity
+ *         schema:
+ *           type: string
+ *           enum: [LOW, MEDIUM, HIGH]
+ *     responses:
+ *       200:
+ *         description: Filtered list of reports ordered by most recent
+ *       400:
+ *         description: cityId is required
+ */
+reportsRouter.get(
+  '/city',
+  authenticate,
+  requireRole('COMPANY', 'MUNICIPAL'),
+  (req, res, next) => reportsController.getByCity(req, res, next)
+)
+/**
+ * @swagger
  * /api/reports/{id}:
  *   get:
  *     summary: Get a specific report by ID

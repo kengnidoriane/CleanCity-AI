@@ -39,8 +39,23 @@ export class ReportsService {
     return report
   }
 
-  async findByUser(userId: string) {
+  async findByCity(cityId: string, filters: {
+    status?: string
+    wasteType?: string
+    severity?: string
+  }) {
     return prisma.wasteReport.findMany({
+      where: {
+        cityId,
+        ...(filters.status && { status: filters.status as any }),
+        ...(filters.wasteType && { wasteType: filters.wasteType as any }),
+        ...(filters.severity && { severity: filters.severity as any }),
+      },
+      orderBy: { createdAt: 'desc' },
+    })
+  }
+
+  async findByUser(userId: string) {    return prisma.wasteReport.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
     })

@@ -32,6 +32,22 @@ export class ReportsController {
     }
   }
 
+  async getByCity(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { cityId, status, wasteType, severity } = req.query as Record<string, string>
+
+      if (!cityId) {
+        res.status(400).json({ message: 'cityId query parameter is required' })
+        return
+      }
+
+      const reports = await reportsService.findByCity(cityId, { status, wasteType, severity })
+      res.status(200).json(reports)
+    } catch (err) {
+      next(err)
+    }
+  }
+
   async getMine(req: Request, res: Response, next: NextFunction) {
     try {
       const reports = await reportsService.findByUser(req.user!.userId)
