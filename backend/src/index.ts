@@ -11,6 +11,7 @@ import { reportsRouter } from './modules/reports/reports.router'
 import { usersRouter } from './modules/users/users.router'
 import { schedulesRouter } from './modules/schedules/schedules.router'
 import { trucksRouter } from './modules/trucks/trucks.router'
+import { routesRouter } from './modules/routes/routes.router'
 import { errorHandler } from './middlewares/errorHandler'
 
 dotenv.config()
@@ -39,6 +40,7 @@ app.use('/api/reports', reportsRouter)
 app.use('/api/users', usersRouter)
 app.use('/api/schedules', schedulesRouter)
 app.use('/api/trucks', trucksRouter)
+app.use('/api/routes', routesRouter)
 
 // WebSocket — clients join city room to receive real-time truck positions
 io.on('connection', (socket) => {
