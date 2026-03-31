@@ -1,6 +1,6 @@
 import { Router, type IRouter } from 'express'
 import { authenticate, requireRole } from '../../middlewares/authenticate'
-import { analyticsController, municipalAnalyticsController } from './analytics.controller'
+import { analyticsController, municipalAnalyticsController, hotspotController } from './analytics.controller'
 
 export const analyticsRouter: IRouter = Router()
 
@@ -111,4 +111,37 @@ analyticsRouter.get(
   authenticate,
   requireRole('MUNICIPAL'),
   (req, res, next) => municipalAnalyticsController.getCompanyPerformance(req, res, next)
+)
+
+/**
+ * @swagger
+ * /api/analytics/hotspots:
+ *   get:
+ *     summary: Get waste hotspot data for heatmap visualization — US-M03
+ *     tags: [Analytics]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: cityId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: period
+ *         required: false
+ *         schema:
+ *           type: integer
+ *         description: Number of days to look back (e.g. 7, 30). Omit for all time.
+ *     responses:
+ *       200:
+ *         description: Array of hotspot points with lat, lng, count and intensity (0-1)
+ *       400:
+ *         description: cityId is required
+ */
+analyticsRouter.get(
+  '/hotspots',
+  authenticate,
+  requireRole('MUNICIPAL'),
+  (req, res, next) => hotspotController.getHotspots(req, res, next)
 )

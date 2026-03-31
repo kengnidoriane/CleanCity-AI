@@ -1,6 +1,5 @@
 import type { Request, Response, NextFunction } from 'express'
 import { z } from 'zod'
-import { analyticsService, municipalAnalyticsService } from './analytics.service'
 
 const companyStatsSchema = z.object({
   companyId: z.string().min(1, 'companyId is required'),
@@ -18,15 +17,10 @@ export class AnalyticsController {
         })
         return
       }
-
-      const stats = await analyticsService.getCompanyStats(
-        parsed.data.companyId,
-        parsed.data.period
-      )
+      const { analyticsService } = await import('./analytics.service')
+      const stats = await analyticsService.getCompanyStats(parsed.data.companyId, parsed.data.period)
       res.status(200).json(stats)
-    } catch (err) {
-      next(err)
-    }
+    } catch (err) { next(err) }
   }
 }
 
@@ -36,10 +30,8 @@ export class MunicipalAnalyticsController {
   async getCityKpis(req: Request, res: Response, next: NextFunction) {
     try {
       const cityId = req.query['cityId'] as string
-      if (!cityId) {
-        res.status(400).json({ message: 'cityId is required' })
-        return
-      }
+      if (!cityId) { res.status(400).json({ message: 'cityId is required' }); return }
+      const { municipalAnalyticsService } = await import('./analytics.service')
       const kpis = await municipalAnalyticsService.getCityKpis(cityId)
       res.status(200).json(kpis)
     } catch (err) { next(err) }
@@ -48,10 +40,8 @@ export class MunicipalAnalyticsController {
   async getCompanyPerformance(req: Request, res: Response, next: NextFunction) {
     try {
       const cityId = req.query['cityId'] as string
-      if (!cityId) {
-        res.status(400).json({ message: 'cityId is required' })
-        return
-      }
+      if (!cityId) { res.status(400).json({ message: 'cityId is required' }); return }
+      const { municipalAnalyticsService } = await import('./analytics.service')
       const data = await municipalAnalyticsService.getCompanyPerformance(cityId)
       res.status(200).json(data)
     } catch (err) { next(err) }
@@ -59,3 +49,18 @@ export class MunicipalAnalyticsController {
 }
 
 export const municipalAnalyticsController = new MunicipalAnalyticsController()
+
+export class HotspotController {
+  async getHotspots(req: Request, res: Response, next: NextFunction) {
+    try {
+      const cityId = req.query['cityId'] as string
+      if (!cityId) { res.status(400).json({ message: 'cityId is required' }); return }
+      const period = req.query['period'] ? parseInt(req.query['period'] as string) : undefined
+      const { hotspotService } = await import('./analytics.service')
+      const hotspots = await hotspotService.getHotspots(cityId, period)
+      res.status(200).json(hotspots)
+    } catch (err) { next(err) }
+  }
+}
+
+export const hotspotController = new HotspotController()

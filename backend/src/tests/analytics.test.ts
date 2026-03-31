@@ -14,18 +14,13 @@ vi.mock('../middlewares/authenticate', () => ({
   requireRole: () => (_req: any, _res: any, next: any) => next(),
 }))
 
-vi.mock('../lib/prisma', () => ({
-  prisma: {
-    wasteReport: {
-      count: vi.fn(),
-    },
-    collectionRoute: {
-      aggregate: vi.fn(),
-    },
-  },
+vi.mock('../modules/analytics/analytics.service', () => ({
+  analyticsService: { getCompanyStats: vi.fn() },
+  municipalAnalyticsService: { getCityKpis: vi.fn(), getCompanyPerformance: vi.fn() },
+  hotspotService: { getHotspots: vi.fn() },
 }))
 
-import { prisma } from '../lib/prisma'
+import { analyticsService } from '../modules/analytics/analytics.service'
 
 const app = express()
 app.use(express.json())
@@ -36,16 +31,11 @@ describe('GET /api/analytics/company', () => {
   beforeEach(() => vi.clearAllMocks())
 
   it('should return performance stats for current period', async () => {
-    vi.mocked(prisma.wasteReport.count)
-      .mockResolvedValueOnce(50)   // total current
-      .mockResolvedValueOnce(35)   // collected current
-      .mockResolvedValueOnce(15)   // pending current
-      .mockResolvedValueOnce(40)   // total previous
-      .mockResolvedValueOnce(28)   // collected previous
-
-    vi.mocked(prisma.collectionRoute.aggregate).mockResolvedValue({
-      _sum: { totalDistanceKm: 120.5 },
-    } as any)
+    vi.mocked(analyticsService.getCompanyStats).mockResolvedValue({
+      period: 'week',
+      current: { totalReports: 50, collected: 35, pending: 15, collectionRate: 70, totalDistanceKm: 120.5 },
+      previous: { totalReports: 40, collected: 28, pending: 12, collectionRate: 70, totalDistanceKm: 95 },
+    })
 
     const res = await request(app)
       .get('/api/analytics/company')
@@ -55,7 +45,7 @@ describe('GET /api/analytics/company', () => {
     expect(res.body.current.totalReports).toBe(50)
     expect(res.body.current.collected).toBe(35)
     expect(res.body.current.pending).toBe(15)
-    expect(res.body.current.collectionRate).toBe(70) // 35/50 * 100
+    expect(res.body.current.collectionRate).toBe(70)
     expect(res.body.current.totalDistanceKm).toBe(120.5)
     expect(res.body.previous.collected).toBe(28)
   })
@@ -77,10 +67,11 @@ describe('GET /api/analytics/company', () => {
   })
 
   it('should handle zero reports gracefully', async () => {
-    vi.mocked(prisma.wasteReport.count).mockResolvedValue(0)
-    vi.mocked(prisma.collectionRoute.aggregate).mockResolvedValue({
-      _sum: { totalDistanceKm: null },
-    } as any)
+    vi.mocked(analyticsService.getCompanyStats).mockResolvedValue({
+      period: 'day',
+      current: { totalReports: 0, collected: 0, pending: 0, collectionRate: 0, totalDistanceKm: 0 },
+      previous: { totalReports: 0, collected: 0, pending: 0, collectionRate: 0, totalDistanceKm: 0 },
+    })
 
     const res = await request(app)
       .get('/api/analytics/company')

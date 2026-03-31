@@ -15,16 +15,13 @@ vi.mock('../middlewares/authenticate', () => ({
   requireRole: () => (_req: any, _res: any, next: any) => next(),
 }))
 
-vi.mock('../lib/prisma', () => ({
-  prisma: {
-    wasteReport: { count: vi.fn() },
-    collectionRoute: { aggregate: vi.fn() },
-    truck: { count: vi.fn() },
-    company: { findMany: vi.fn() },
-  },
+vi.mock('../modules/analytics/analytics.service', () => ({
+  analyticsService: { getCompanyStats: vi.fn() },
+  municipalAnalyticsService: { getCityKpis: vi.fn(), getCompanyPerformance: vi.fn() },
+  hotspotService: { getHotspots: vi.fn() },
 }))
 
-import { prisma } from '../lib/prisma'
+import { municipalAnalyticsService } from '../modules/analytics/analytics.service'
 
 const app = express()
 app.use(express.json())
@@ -35,13 +32,12 @@ describe('GET /api/analytics/city — US-M02 city KPI dashboard', () => {
   beforeEach(() => vi.clearAllMocks())
 
   it('should return city-wide KPIs', async () => {
-    vi.mocked(prisma.wasteReport.count)
-      .mockResolvedValueOnce(120)  // total active reports
-      .mockResolvedValueOnce(85)   // collected
-    vi.mocked(prisma.truck.count).mockResolvedValue(8)
-    vi.mocked(prisma.collectionRoute.aggregate).mockResolvedValue({
-      _avg: { estimatedDurationMin: 45 },
-    } as any)
+    vi.mocked(municipalAnalyticsService.getCityKpis).mockResolvedValue({
+      totalActiveReports: 120,
+      collectionRate: 71,
+      activeTrucks: 8,
+      avgResponseTimeMin: 45,
+    })
 
     const res = await request(app)
       .get('/api/analytics/city')
@@ -49,7 +45,7 @@ describe('GET /api/analytics/city — US-M02 city KPI dashboard', () => {
 
     expect(res.status).toBe(200)
     expect(res.body.totalActiveReports).toBe(120)
-    expect(res.body.collectionRate).toBe(71) // 85/120 * 100
+    expect(res.body.collectionRate).toBe(71)
     expect(res.body.activeTrucks).toBe(8)
     expect(res.body.avgResponseTimeMin).toBe(45)
   })
@@ -64,16 +60,9 @@ describe('GET /api/analytics/city/companies — US-M04 company performance', () 
   beforeEach(() => vi.clearAllMocks())
 
   it('should return performance metrics per company', async () => {
-    vi.mocked(prisma.company.findMany).mockResolvedValue([
-      { id: 'c1', name: 'CleanCo', email: 'a@b.com', phone: null, cityId: CITY_ID, createdAt: new Date() },
-    ] as any)
-    vi.mocked(prisma.wasteReport.count)
-      .mockResolvedValueOnce(50)  // total for c1
-      .mockResolvedValueOnce(40)  // collected for c1
-    vi.mocked(prisma.truck.count).mockResolvedValue(3)
-    vi.mocked(prisma.collectionRoute.aggregate).mockResolvedValue({
-      _avg: { estimatedDurationMin: 30 },
-    } as any)
+    vi.mocked(municipalAnalyticsService.getCompanyPerformance).mockResolvedValue([
+      { id: 'c1', name: 'CleanCo', totalReports: 50, collected: 40, collectionRate: 80, activeTrucks: 3, avgResponseTimeMin: 30 },
+    ])
 
     const res = await request(app)
       .get('/api/analytics/city/companies')
@@ -82,7 +71,7 @@ describe('GET /api/analytics/city/companies — US-M04 company performance', () 
     expect(res.status).toBe(200)
     expect(res.body).toHaveLength(1)
     expect(res.body[0].name).toBe('CleanCo')
-    expect(res.body[0].collectionRate).toBe(80) // 40/50 * 100
+    expect(res.body[0].collectionRate).toBe(80)
     expect(res.body[0].activeTrucks).toBe(3)
   })
 })
