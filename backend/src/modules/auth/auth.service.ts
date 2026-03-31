@@ -1,7 +1,7 @@
 import argon2 from 'argon2'
 import jwt from 'jsonwebtoken'
 import { prisma } from '../../lib/prisma'
-import type { RegisterInput, LoginInput } from './auth.schema'
+import type { RegisterInput, LoginInput, EmailLoginInput } from './auth.schema'
 
 export class AuthService {
   async register(input: RegisterInput) {
@@ -84,6 +84,39 @@ export class AuthService {
     // 5. Return user without passwordHash
     const { passwordHash: _, ...safeUser } = user
 
+    return { user: safeUser, token }
+  }
+
+  async loginWithEmail(input: EmailLoginInput, requiredRole: 'COMPANY' | 'MUNICIPAL') {
+    // 1. Find user by email
+    const user = await prisma.user.findUnique({
+      where: { email: input.email },
+    })
+
+    // 2. Generic error — never reveal if email exists or not
+    if (!user) {
+      throw { status: 401, message: 'Invalid credentials' }
+    }
+
+    // 3. Verify password
+    const isValid = await argon2.verify(user.passwordHash, input.password)
+    if (!isValid) {
+      throw { status: 401, message: 'Invalid credentials' }
+    }
+
+    // 4. Check role — company and municipal have separate login endpoints
+    if (user.role !== requiredRole) {
+      throw { status: 403, message: `Access restricted to ${requiredRole.toLowerCase()} accounts` }
+    }
+
+    // 5. Generate JWT
+    const token = jwt.sign(
+      { userId: user.id, role: user.role },
+      process.env['JWT_SECRET'] as string,
+      { expiresIn: '24h' }
+    )
+
+    const { passwordHash: _, ...safeUser } = user
     return { user: safeUser, token }
   }
 }

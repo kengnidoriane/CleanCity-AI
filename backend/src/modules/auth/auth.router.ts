@@ -112,3 +112,71 @@ authRouter.post('/register', (req, res, next) =>
 authRouter.post('/login', (req, res, next) =>
   authController.login(req, res, next)
 )
+
+/**
+ * @swagger
+ * /api/auth/login/company:
+ *   post:
+ *     summary: Login for waste collection company managers
+ *     tags: [Auth]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email, password]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: contact@cleanco.sn
+ *               password:
+ *                 type: string
+ *                 example: SecurePass123!
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Invalid credentials
+ *       403:
+ *         description: Account is not a company account
+ */
+authRouter.post('/login/company', (req, res, next) =>
+  authController.loginCompany(req, res, next)
+)
+
+/**
+ * @swagger
+ * /api/auth/login/municipal:
+ *   post:
+ *     summary: Login for municipal authority agents
+ *     tags: [Auth]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email, password]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *       401:
+ *         description: Invalid credentials
+ *       403:
+ *         description: Account is not a municipal account
+ */
+authRouter.post('/login/municipal', (req, res, next) =>
+  authController.loginMunicipal(req, res, next)
+)
