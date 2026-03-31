@@ -12,6 +12,7 @@ import { usersRouter } from './modules/users/users.router'
 import { schedulesRouter } from './modules/schedules/schedules.router'
 import { trucksRouter } from './modules/trucks/trucks.router'
 import { routesRouter } from './modules/routes/routes.router'
+import { analyticsRouter } from './modules/analytics/analytics.router'
 import { errorHandler } from './middlewares/errorHandler'
 import { startAlertMonitor } from './jobs/alert-monitor'
 
@@ -42,6 +43,7 @@ app.use('/api/users', usersRouter)
 app.use('/api/schedules', schedulesRouter)
 app.use('/api/trucks', trucksRouter)
 app.use('/api/routes', routesRouter)
+app.use('/api/analytics', analyticsRouter)
 
 // WebSocket — clients join city room to receive real-time truck positions
 io.on('connection', (socket) => {
