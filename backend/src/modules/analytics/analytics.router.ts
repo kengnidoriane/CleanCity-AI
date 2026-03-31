@@ -1,6 +1,6 @@
 import { Router, type IRouter } from 'express'
 import { authenticate, requireRole } from '../../middlewares/authenticate'
-import { analyticsController, municipalAnalyticsController, hotspotController } from './analytics.controller'
+import { analyticsController, municipalAnalyticsController, hotspotController, monthlyReportController } from './analytics.controller'
 
 export const analyticsRouter: IRouter = Router()
 
@@ -144,4 +144,48 @@ analyticsRouter.get(
   authenticate,
   requireRole('MUNICIPAL'),
   (req, res, next) => hotspotController.getHotspots(req, res, next)
+)
+
+/**
+ * @swagger
+ * /api/analytics/monthly-report:
+ *   get:
+ *     summary: Generate monthly activity report as PDF — US-M07
+ *     tags: [Analytics]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: cityId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: year
+ *         required: true
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: month
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 12
+ *     responses:
+ *       200:
+ *         description: PDF file download
+ *         content:
+ *           application/pdf:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       400:
+ *         description: cityId, year and month are required
+ */
+analyticsRouter.get(
+  '/monthly-report',
+  authenticate,
+  requireRole('MUNICIPAL'),
+  (req, res, next) => monthlyReportController.generateReport(req, res, next)
 )

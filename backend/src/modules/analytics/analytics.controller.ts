@@ -64,3 +64,23 @@ export class HotspotController {
 }
 
 export const hotspotController = new HotspotController()
+
+export class MonthlyReportController {
+  async generateReport(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { cityId, year, month } = req.query as Record<string, string>
+      if (!cityId) { res.status(400).json({ message: 'cityId is required' }); return }
+      if (!year || !month) { res.status(400).json({ message: 'year and month are required' }); return }
+
+      const { monthlyReportService } = await import('./analytics.service')
+      const pdfBuffer = await monthlyReportService.generateReport(cityId, parseInt(year), parseInt(month))
+
+      const filename = `monthly-report-${year}-${month.padStart(2, '0')}.pdf`
+      res.setHeader('Content-Type', 'application/pdf')
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
+      res.status(200).send(pdfBuffer)
+    } catch (err) { next(err) }
+  }
+}
+
+export const monthlyReportController = new MonthlyReportController()
