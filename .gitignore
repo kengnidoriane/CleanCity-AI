@@ -28,3 +28,9 @@ dist-ssr
 cleanCityAI.md
 CleanCityAI_Proposal_FOSSO_KENGNI_Doriane.docx.pdf
 docs/
+
+# Python cache
+**/__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
