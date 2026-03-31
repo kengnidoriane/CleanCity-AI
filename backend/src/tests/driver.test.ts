@@ -31,6 +31,9 @@ vi.mock('../lib/prisma', () => ({
       updateMany: vi.fn(),
       update: vi.fn(),
     },
+    user: {
+      findUnique: vi.fn(),
+    },
     $transaction: vi.fn((fn: any) => fn({
       collectionRoute: { update: vi.fn() },
       truck: { update: vi.fn() },
@@ -41,6 +44,10 @@ vi.mock('../lib/prisma', () => ({
 
 vi.mock('../lib/ai-client', () => ({
   callOptimizeRoute: vi.fn(),
+}))
+
+vi.mock('../lib/notifications', () => ({
+  sendPushNotification: vi.fn().mockResolvedValue(undefined),
 }))
 
 import { prisma } from '../lib/prisma'
@@ -76,7 +83,8 @@ describe('PATCH /api/routes/:id/stops/:stopIndex/complete', () => {
 
     vi.mocked(prisma.collectionRoute.findUnique).mockResolvedValue(mockRoute as any)
     vi.mocked(prisma.collectionRoute.update).mockResolvedValue(updatedRoute as any)
-    vi.mocked(prisma.wasteReport.update).mockResolvedValue({} as any)
+    vi.mocked(prisma.wasteReport.update).mockResolvedValue({ id: 'r1', userId: 'user-uuid', createdAt: new Date() } as any)
+    vi.mocked(prisma.user.findUnique).mockResolvedValue({ pushToken: null } as any)
     vi.mocked(prisma.truck.update).mockResolvedValue({} as any)
 
     const res = await request(app)
@@ -96,7 +104,8 @@ describe('PATCH /api/routes/:id/stops/:stopIndex/complete', () => {
 
     vi.mocked(prisma.collectionRoute.findUnique).mockResolvedValue(routeWithTwoCollected as any)
     vi.mocked(prisma.collectionRoute.update).mockResolvedValue(completedRoute as any)
-    vi.mocked(prisma.wasteReport.update).mockResolvedValue({} as any)
+    vi.mocked(prisma.wasteReport.update).mockResolvedValue({ id: 'r3', userId: 'user-uuid', createdAt: new Date() } as any)
+    vi.mocked(prisma.user.findUnique).mockResolvedValue({ pushToken: null } as any)
     vi.mocked(prisma.truck.update).mockResolvedValue({} as any)
 
     const res = await request(app)
