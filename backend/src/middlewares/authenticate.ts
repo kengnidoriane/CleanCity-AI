@@ -22,8 +22,12 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
   }
 
   const token = authHeader.split(' ')[1]
+  if (!token) {
+    res.status(401).json({ message: 'Missing or invalid authorization header' })
+    return
+  }
   try {
-    const payload = jwt.verify(token!, process.env['JWT_SECRET'] as string) as AuthPayload
+    const payload = jwt.verify(token, process.env['JWT_SECRET'] as string) as AuthPayload
     req.user = payload
     next()
   } catch {

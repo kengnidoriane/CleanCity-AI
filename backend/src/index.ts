@@ -3,13 +3,14 @@ import cors from 'cors'
 import helmet from 'helmet'
 import dotenv from 'dotenv'
 import { createServer } from 'http'
-import { Server } from 'socket.io'
 import swaggerUi from 'swagger-ui-express'
 import { swaggerSpec } from './config/swagger'
+import { initSocket } from './lib/socket'
 import { authRouter } from './modules/auth/auth.router'
 import { reportsRouter } from './modules/reports/reports.router'
 import { usersRouter } from './modules/users/users.router'
 import { schedulesRouter } from './modules/schedules/schedules.router'
+import { trucksRouter } from './modules/trucks/trucks.router'
 import { errorHandler } from './middlewares/errorHandler'
 
 dotenv.config()
@@ -17,9 +18,7 @@ dotenv.config()
 const app = express()
 const httpServer = createServer(app)
 
-export const io = new Server(httpServer, {
-  cors: { origin: '*' },
-})
+export const io = initSocket(httpServer)
 
 // Middleware
 app.use(helmet())
@@ -39,11 +38,18 @@ app.use('/api/auth', authRouter)
 app.use('/api/reports', reportsRouter)
 app.use('/api/users', usersRouter)
 app.use('/api/schedules', schedulesRouter)
-// app.use('/api/routes', routeRouter)
-// app.use('/api/trucks', truckRouter)
-// app.use('/api/analytics', analyticsRouter)
-// app.use('/api/companies', companyRouter)
-// app.use('/api/schedules', scheduleRouter)
+app.use('/api/trucks', trucksRouter)
+
+// WebSocket — clients join city room to receive real-time truck positions
+io.on('connection', (socket) => {
+  socket.on('join_city', (cityId: string) => {
+    socket.join(`city:${cityId}`)
+  })
+
+  socket.on('leave_city', (cityId: string) => {
+    socket.leave(`city:${cityId}`)
+  })
+})
 
 // Global error handler — must be last
 app.use(errorHandler)

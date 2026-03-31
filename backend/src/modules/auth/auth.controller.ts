@@ -28,6 +28,7 @@ export class AuthController {
       next(err)
     }
   }
+
   async login(req: Request, res: Response, next: NextFunction) {
     try {
       const parsed = loginSchema.safeParse(req.body)
