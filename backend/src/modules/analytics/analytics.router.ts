@@ -1,6 +1,6 @@
 import { Router, type IRouter } from 'express'
 import { authenticate, requireRole } from '../../middlewares/authenticate'
-import { analyticsController } from './analytics.controller'
+import { analyticsController, municipalAnalyticsController } from './analytics.controller'
 
 export const analyticsRouter: IRouter = Router()
 
@@ -57,4 +57,58 @@ analyticsRouter.get(
   authenticate,
   requireRole('COMPANY', 'MUNICIPAL'),
   (req, res, next) => analyticsController.getCompanyStats(req, res, next)
+)
+
+/**
+ * @swagger
+ * /api/analytics/city:
+ *   get:
+ *     summary: Get city-wide KPIs for municipal dashboard — US-M02
+ *     tags: [Analytics]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: cityId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: City KPIs including collection rate, active trucks, response time
+ *       400:
+ *         description: cityId is required
+ */
+analyticsRouter.get(
+  '/city',
+  authenticate,
+  requireRole('MUNICIPAL'),
+  (req, res, next) => municipalAnalyticsController.getCityKpis(req, res, next)
+)
+
+/**
+ * @swagger
+ * /api/analytics/city/companies:
+ *   get:
+ *     summary: Get performance metrics per company for municipal monitoring — US-M04
+ *     tags: [Analytics]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: cityId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: List of companies sorted by collection rate descending
+ *       400:
+ *         description: cityId is required
+ */
+analyticsRouter.get(
+  '/city/companies',
+  authenticate,
+  requireRole('MUNICIPAL'),
+  (req, res, next) => municipalAnalyticsController.getCompanyPerformance(req, res, next)
 )

@@ -59,3 +59,69 @@ export class AnalyticsService {
 }
 
 export const analyticsService = new AnalyticsService()
+
+export class MunicipalAnalyticsService {
+  async getCityKpis(cityId: string) {
+    const [totalActive, collected, activeTrucks, routeAgg] = await Promise.all([
+      prisma.wasteReport.count({
+        where: { cityId },
+      }),
+      prisma.wasteReport.count({
+        where: { cityId, status: 'COLLECTED' },
+      }),
+      prisma.truck.count({
+        where: { isActive: true, company: { cityId } },
+      }),
+      prisma.collectionRoute.aggregate({
+        where: { company: { cityId } },
+        _avg: { estimatedDurationMin: true },
+      }),
+    ])
+
+    const collectionRate = totalActive > 0 ? Math.round((collected / totalActive) * 100) : 0
+    const avgResponseTimeMin = Math.round(routeAgg._avg.estimatedDurationMin ?? 0)
+
+    return {
+      totalActiveReports: totalActive,
+      collectionRate,
+      activeTrucks,
+      avgResponseTimeMin,
+    }
+  }
+
+  async getCompanyPerformance(cityId: string) {
+    const companies = await prisma.company.findMany({
+      where: { cityId },
+    })
+
+    const results = await Promise.all(
+      companies.map(async (company) => {
+        const [total, collected, activeTrucks, routeAgg] = await Promise.all([
+          prisma.wasteReport.count({ where: { companyId: company.id } }),
+          prisma.wasteReport.count({ where: { companyId: company.id, status: 'COLLECTED' } }),
+          prisma.truck.count({ where: { companyId: company.id, isActive: true } }),
+          prisma.collectionRoute.aggregate({
+            where: { companyId: company.id },
+            _avg: { estimatedDurationMin: true },
+          }),
+        ])
+
+        const collectionRate = total > 0 ? Math.round((collected / total) * 100) : 0
+
+        return {
+          id: company.id,
+          name: company.name,
+          totalReports: total,
+          collected,
+          collectionRate,
+          activeTrucks,
+          avgResponseTimeMin: Math.round(routeAgg._avg.estimatedDurationMin ?? 0),
+        }
+      })
+    )
+
+    return results.sort((a, b) => b.collectionRate - a.collectionRate)
+  }
+}
+
+export const municipalAnalyticsService = new MunicipalAnalyticsService()
