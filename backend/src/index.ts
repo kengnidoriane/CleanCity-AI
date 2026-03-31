@@ -13,6 +13,7 @@ import { schedulesRouter } from './modules/schedules/schedules.router'
 import { trucksRouter } from './modules/trucks/trucks.router'
 import { routesRouter } from './modules/routes/routes.router'
 import { errorHandler } from './middlewares/errorHandler'
+import { startAlertMonitor } from './jobs/alert-monitor'
 
 dotenv.config()
 
@@ -61,4 +62,6 @@ const PORT = process.env['PORT'] ?? 3000
 httpServer.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
   console.log(`Swagger docs available at http://localhost:${PORT}/api-docs`)
+  startAlertMonitor()
+  console.log('Alert monitor started — checking every 30 seconds')
 })
