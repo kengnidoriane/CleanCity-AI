@@ -35,22 +35,24 @@ export class RoutesService {
     const stops = route.stopSequence as Array<{ reportId: string; reportIds: string[] }>
     const allReportIds = stops.flatMap(s => s.reportIds ?? [s.reportId])
 
-    // 4. Update route status to ACTIVE and assign truck
-    const updated = await prisma.collectionRoute.update({
-      where: { id: routeId },
-      data: { truckId: input.truckId, status: 'ACTIVE' },
-    })
+    // 4. Execute all updates atomically — if one fails, all are rolled back
+    const updated = await prisma.$transaction(async (tx) => {
+      const updatedRoute = await tx.collectionRoute.update({
+        where: { id: routeId },
+        data: { truckId: input.truckId, status: 'ACTIVE' },
+      })
 
-    // 5. Update truck with active route
-    await prisma.truck.update({
-      where: { id: input.truckId },
-      data: { activeRouteId: routeId, isActive: true, completionPercent: 0 },
-    })
+      await tx.truck.update({
+        where: { id: input.truckId },
+        data: { activeRouteId: routeId, isActive: true, completionPercent: 0 },
+      })
 
-    // 6. Update all reports in the route to ASSIGNED
-    await prisma.wasteReport.updateMany({
-      where: { id: { in: allReportIds } },
-      data: { status: 'ASSIGNED', companyId },
+      await tx.wasteReport.updateMany({
+        where: { id: { in: allReportIds } },
+        data: { status: 'ASSIGNED', companyId },
+      })
+
+      return updatedRoute
     })
 
     return updated
