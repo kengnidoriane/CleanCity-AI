@@ -2,6 +2,7 @@ import { prisma } from '../../lib/prisma'
 import { callOptimizeRoute } from '../../lib/ai-client'
 import { sendPushNotification } from '../../lib/notifications'
 import type { OptimizeRouteInput, AssignRouteInput } from './routes.schema'
+import type { Prisma } from '../../generated/prisma'
 
 export class RoutesService {
   async optimize(input: OptimizeRouteInput, companyId: string) {
@@ -37,7 +38,7 @@ export class RoutesService {
     const allReportIds = stops.flatMap(s => s.reportIds ?? [s.reportId])
 
     // 4. Execute all updates atomically — if one fails, all are rolled back
-    const updated = await prisma.$transaction(async (tx) => {
+    const updated = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const updatedRoute = await tx.collectionRoute.update({
         where: { id: routeId },
         data: { truckId: input.truckId, status: 'ACTIVE' },
