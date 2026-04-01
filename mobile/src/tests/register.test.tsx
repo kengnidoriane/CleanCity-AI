@@ -62,20 +62,18 @@ describe('RegisterScreen — US-C01 citizen registration', () => {
     })
   })
 
-  it('shows error alert when registration fails', async () => {
+  it('shows error message when registration fails', async () => {
     jest.spyOn(authApi, 'registerCitizen').mockRejectedValue({
       response: { data: { message: 'Phone number already exists' } },
     })
 
-    const { getByTestId } = render(<RegisterScreen defaultCityId={VALID_CITY_ID} />)
+    const { getByTestId, findByText } = render(<RegisterScreen defaultCityId={VALID_CITY_ID} />)
     fireEvent.changeText(getByTestId('input-name'), 'Alice')
     fireEvent.changeText(getByTestId('input-phone'), '+221770000000')
     fireEvent.changeText(getByTestId('input-password'), 'password123')
     fireEvent.press(getByTestId('btn-register'))
 
-    await waitFor(() => {
-      expect(authApi.registerCitizen).toHaveBeenCalled()
-    })
+    expect(await findByText('Phone number already exists')).toBeTruthy()
   })
 
   it('navigates to login when sign in link is pressed', () => {
