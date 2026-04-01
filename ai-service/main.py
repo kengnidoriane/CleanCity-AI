@@ -1,11 +1,15 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
-import os
+from routers.routes import router as routes_router
 
 load_dotenv()
 
-app = FastAPI(title="CleanCity AI Service", version="1.0.0")
+app = FastAPI(
+    title="Clean City AI Service",
+    version="1.0.0",
+    description="Route optimization service using OR-Tools TSP solver",
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -18,6 +22,4 @@ app.add_middleware(
 def health():
     return {"status": "ok", "service": "cleancity-ai"}
 
-# Routes (added as features are built)
-# from routers import routes
-# app.include_router(routes.router, prefix="/api")
+app.include_router(routes_router, prefix="/api/routes")

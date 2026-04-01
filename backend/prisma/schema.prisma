@@ -1,5 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// Clean City AI — Prisma Schema
+// MVP tables only — Phase 2 tables (predictions, cv_training_data, user_points) added later
 
 generator client {
   provider = "prisma-client-js"
@@ -7,6 +7,200 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
+  provider = "postgresql"
+}
+
+// ─────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────
+
+enum Role {
+  CITIZEN
+  COMPANY
+  MUNICIPAL
+}
+
+enum WasteType {
+  PLASTIC
+  ORGANIC
+  BULKY
+  ELECTRONIC
+  HAZARDOUS
+  OTHER
+}
+
+enum Severity {
+  LOW    // 1
+  MEDIUM // 2-3
+  HIGH   // 4-5
+}
+
+enum ReportStatus {
+  PENDING
+  ASSIGNED
+  COLLECTED
+}
+
+enum RouteStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+}
+
+// ─────────────────────────────────────────
+// CITY
+// ─────────────────────────────────────────
+
+model City {
+  id        String   @id @default(uuid())
+  name      String
+  country   String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  users     User[]
+  companies Company[]
+  reports   WasteReport[]
+  schedules Schedule[]
+
+  @@map("cities")
+}
+
+// ─────────────────────────────────────────
+// USER
+// ─────────────────────────────────────────
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  phone        String?  @unique
+  email        String?  @unique
+  passwordHash String   @map("password_hash")
+  role         Role
+  cityId       String   @map("city_id")
+  pushToken    String?  @map("push_token")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  city         City          @relation(fields: [cityId], references: [id])
+  reports      WasteReport[]
+  driver       Driver?
+
+  @@map("users")
+}
+
+// ─────────────────────────────────────────
+// COMPANY
+// ─────────────────────────────────────────
+
+model Company {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  phone     String?
+  cityId    String   @map("city_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  city      City      @relation(fields: [cityId], references: [id])
+  trucks    Truck[]
+  routes    CollectionRoute[]
+  schedules Schedule[]
+
+  @@map("companies")
+}
+
+// ─────────────────────────────────────────
+// TRUCK & DRIVER
+// ─────────────────────────────────────────
+
+model Driver {
+  id        String  @id @default(uuid())
+  userId    String  @unique @map("user_id")
+  companyId String  @map("company_id")
+
+  user      User    @relation(fields: [userId], references: [id])
+  truck     Truck?
+
+  @@map("drivers")
+}
+
+model Truck {
+  id               String   @id @default(uuid())
+  name             String
+  companyId        String   @map("company_id")
+  driverId         String?  @unique @map("driver_id")
+  currentLat       Float?   @map("current_lat")
+  currentLng       Float?   @map("current_lng")
+  lastUpdated      DateTime? @map("last_updated")
+  completionPercent Float    @default(0) @map("completion_percent")
+  isActive         Boolean  @default(false) @map("is_active")
+  activeRouteId    String?  @map("active_route_id")
+
+  company          Company         @relation(fields: [companyId], references: [id])
+  driver           Driver?         @relation(fields: [driverId], references: [id])
+  routes           CollectionRoute[]
+
+  @@map("trucks")
+}
+
+// ─────────────────────────────────────────
+// WASTE REPORT
+// ─────────────────────────────────────────
+
+model WasteReport {
+  id          String       @id @default(uuid())
+  userId      String       @map("user_id")
+  photoUrl    String       @map("photo_url")
+  latitude    Float
+  longitude   Float
+  wasteType   WasteType    @map("waste_type")
+  severity    Severity
+  status      ReportStatus @default(PENDING)
+  companyId   String?      @map("company_id")
+  collectedAt DateTime?    @map("collected_at")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  cityId      String       @map("city_id")
+
+  user        User         @relation(fields: [userId], references: [id])
+  city        City         @relation(fields: [cityId], references: [id])
+
+  @@map("waste_reports")
+}
+
+// ─────────────────────────────────────────
+// COLLECTION ROUTE
+// ─────────────────────────────────────────
+
+model CollectionRoute {
+  id                  String      @id @default(uuid())
+  companyId           String      @map("company_id")
+  truckId             String?     @map("truck_id")
+  stopSequence        Json        @map("stop_sequence") // ordered array of report IDs
+  optimizedPath       Json?       @map("optimized_path") // GeoJSON LineString
+  totalDistanceKm     Float?      @map("total_distance_km")
+  estimatedDurationMin Int?       @map("estimated_duration_min")
+  status              RouteStatus @default(DRAFT)
+  createdAt           DateTime    @default(now()) @map("created_at")
+
+  company             Company     @relation(fields: [companyId], references: [id])
+  truck               Truck?      @relation(fields: [truckId], references: [id])
+
+  @@map("collection_routes")
+}
+
+// ─────────────────────────────────────────
+// COLLECTION SCHEDULE
+// ─────────────────────────────────────────
+
+model Schedule {
+  id              String  @id @default(uuid())
+  companyId       String  @map("company_id")
+  cityId          String  @map("city_id")
+  zone            String  // neighborhood or zone name
+  dayOfWeek       Int     @map("day_of_week") // 0=Sunday, 6=Saturday
+  timeWindowStart String  @map("time_window_start") // e.g. "08:00"
+  timeWindowEnd   String  @map("time_window_end")   // e.g. "12:00"
+
+  company         Company @relation(fields: [companyId], references: [id])
+  city            City    @relation(fields: [cityId], references: [id])
+
+  @@map("schedules")
 }
