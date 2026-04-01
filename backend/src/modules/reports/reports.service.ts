@@ -81,7 +81,7 @@ export class ReportsService {
     })
 
     const header = 'id,date,location,wasteType,severity,status,company,collectedAt'
-    const rows = reports.map(r =>
+    const rows = reports.map((r: typeof reports[number]) =>
       [
         r.id,
         r.createdAt.toISOString(),
