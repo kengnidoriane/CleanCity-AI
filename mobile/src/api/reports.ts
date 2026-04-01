@@ -41,3 +41,8 @@ export async function submitReport(payload: CreateReportPayload): Promise<Report
   })
   return res.data
 }
+
+export async function getMyReports(): Promise<Report[]> {
+  const res = await apiClient.get<Report[]>('/api/reports/mine')
+  return res.data
+}
