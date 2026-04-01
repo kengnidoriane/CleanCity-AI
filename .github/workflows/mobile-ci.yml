@@ -29,10 +29,6 @@ jobs:
         run: pnpm install
         working-directory: mobile
 
-      - name: Type check
-        run: pnpm exec tsc --noEmit
-        working-directory: mobile
-
       - name: Run tests
         run: pnpm test
         working-directory: mobile

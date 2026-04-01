@@ -35,7 +35,7 @@ jobs:
         working-directory: ${{ matrix.app }}
 
       - name: Type check
-        run: pnpm exec tsc --noEmit
+        run: pnpm exec tsc -b
         working-directory: ${{ matrix.app }}
 
       - name: Run linter
