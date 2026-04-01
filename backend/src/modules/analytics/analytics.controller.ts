@@ -1,5 +1,11 @@
 import type { Request, Response, NextFunction } from 'express'
 import { z } from 'zod'
+import {
+  analyticsService,
+  municipalAnalyticsService,
+  hotspotService,
+  monthlyReportService,
+} from './analytics.service'
 
 const companyStatsSchema = z.object({
   companyId: z.string().min(1, 'companyId is required'),
@@ -17,7 +23,6 @@ export class AnalyticsController {
         })
         return
       }
-      const { analyticsService } = await import('./analytics.service')
       const stats = await analyticsService.getCompanyStats(parsed.data.companyId, parsed.data.period)
       res.status(200).json(stats)
     } catch (err) { next(err) }
@@ -31,7 +36,6 @@ export class MunicipalAnalyticsController {
     try {
       const cityId = req.query['cityId'] as string
       if (!cityId) { res.status(400).json({ message: 'cityId is required' }); return }
-      const { municipalAnalyticsService } = await import('./analytics.service')
       const kpis = await municipalAnalyticsService.getCityKpis(cityId)
       res.status(200).json(kpis)
     } catch (err) { next(err) }
@@ -41,7 +45,6 @@ export class MunicipalAnalyticsController {
     try {
       const cityId = req.query['cityId'] as string
       if (!cityId) { res.status(400).json({ message: 'cityId is required' }); return }
-      const { municipalAnalyticsService } = await import('./analytics.service')
       const data = await municipalAnalyticsService.getCompanyPerformance(cityId)
       res.status(200).json(data)
     } catch (err) { next(err) }
@@ -56,7 +59,6 @@ export class HotspotController {
       const cityId = req.query['cityId'] as string
       if (!cityId) { res.status(400).json({ message: 'cityId is required' }); return }
       const period = req.query['period'] ? parseInt(req.query['period'] as string) : undefined
-      const { hotspotService } = await import('./analytics.service')
       const hotspots = await hotspotService.getHotspots(cityId, period)
       res.status(200).json(hotspots)
     } catch (err) { next(err) }
@@ -72,7 +74,6 @@ export class MonthlyReportController {
       if (!cityId) { res.status(400).json({ message: 'cityId is required' }); return }
       if (!year || !month) { res.status(400).json({ message: 'year and month are required' }); return }
 
-      const { monthlyReportService } = await import('./analytics.service')
       const pdfBuffer = await monthlyReportService.generateReport(cityId, parseInt(year), parseInt(month))
 
       const filename = `monthly-report-${year}-${month.padStart(2, '0')}.pdf`
