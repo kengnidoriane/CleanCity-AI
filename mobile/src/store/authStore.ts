@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { registerPushToken } from '../services/notifications'
 
 interface User {
   id: string
@@ -29,6 +30,8 @@ export const useAuthStore = create<AuthState>((set) => ({
     // Make token available to axios interceptor
     ;(globalThis as Record<string, unknown>)['__authToken'] = token
     set({ token, user })
+    // Register push token fire-and-forget — must not block auth flow
+    registerPushToken().catch(() => {})
   },
 
   logout: async () => {
