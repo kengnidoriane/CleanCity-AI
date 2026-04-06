@@ -3,6 +3,7 @@ import LoginPage from './pages/LoginPage'
 import KpiDashboardPage from './pages/KpiDashboardPage'
 import HotspotMapPage from './pages/HotspotMapPage'
 import CompanyPerformancePage from './pages/CompanyPerformancePage'
+import CitywideTruckMapPage from './pages/CitywideTruckMapPage'
 import DashboardLayout from './components/DashboardLayout'
 import AuthGuard from './components/AuthGuard'
 
@@ -23,6 +24,7 @@ export default function App() {
           <Route path="kpi" element={<KpiDashboardPage />} />
           <Route path="hotspots" element={<HotspotMapPage />} />
           <Route path="companies" element={<CompanyPerformancePage />} />
+          <Route path="trucks" element={<CitywideTruckMapPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>

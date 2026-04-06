@@ -5,6 +5,7 @@ const NAV_ITEMS = [
   { to: '/dashboard/kpi', label: 'KPI Dashboard', icon: '📊' },
   { to: '/dashboard/hotspots', label: 'Waste Hotspots', icon: '🗺️' },
   { to: '/dashboard/companies', label: 'Companies', icon: '🏢' },
+  { to: '/dashboard/trucks', label: 'City Trucks', icon: '🚛' },
 ]
 
 function navClass(isActive: boolean) {
