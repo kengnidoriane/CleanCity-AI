@@ -5,6 +5,7 @@ import HotspotMapPage from './pages/HotspotMapPage'
 import CompanyPerformancePage from './pages/CompanyPerformancePage'
 import CitywideTruckMapPage from './pages/CitywideTruckMapPage'
 import AuditTrailPage from './pages/AuditTrailPage'
+import MonthlyReportPage from './pages/MonthlyReportPage'
 import DashboardLayout from './components/DashboardLayout'
 import AuthGuard from './components/AuthGuard'
 
@@ -27,6 +28,7 @@ export default function App() {
           <Route path="companies" element={<CompanyPerformancePage />} />
           <Route path="trucks" element={<CitywideTruckMapPage />} />
           <Route path="audit" element={<AuditTrailPage />} />
+          <Route path="monthly-report" element={<MonthlyReportPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
