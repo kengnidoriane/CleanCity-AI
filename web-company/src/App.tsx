@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import LoginPage from './pages/LoginPage'
 import ReportsMapPage from './pages/ReportsMapPage'
+import RouteOptimizerPage from './pages/RouteOptimizerPage'
 import DashboardLayout from './components/DashboardLayout'
 import AuthGuard from './components/AuthGuard'
 
@@ -30,7 +31,7 @@ export default function App() {
         >
           <Route index element={<Navigate to="reports" replace />} />
           <Route path="reports" element={<ReportsMapPage />} />
-          <Route path="routes" element={<PlaceholderPage title="Route Optimizer" />} />
+          <Route path="routes" element={<RouteOptimizerPage />} />
           <Route path="fleet" element={<PlaceholderPage title="Fleet Tracking" />} />
           <Route path="stats" element={<PlaceholderPage title="Statistics" />} />
         </Route>
