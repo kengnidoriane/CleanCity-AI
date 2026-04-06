@@ -8,6 +8,7 @@ const NAV_ITEMS = [
   { to: '/dashboard/trucks', label: 'City Trucks', icon: '🚛' },
   { to: '/dashboard/audit', label: 'Audit Trail', icon: '📋' },
   { to: '/dashboard/monthly-report', label: 'Monthly Report', icon: '📄' },
+  { to: '/dashboard/companies/register', label: 'Register Company', icon: '➕' },
 ]
 
 function navClass(isActive: boolean) {

@@ -6,6 +6,7 @@ import CompanyPerformancePage from './pages/CompanyPerformancePage'
 import CitywideTruckMapPage from './pages/CitywideTruckMapPage'
 import AuditTrailPage from './pages/AuditTrailPage'
 import MonthlyReportPage from './pages/MonthlyReportPage'
+import CompanyRegistrationPage from './pages/CompanyRegistrationPage'
 import DashboardLayout from './components/DashboardLayout'
 import AuthGuard from './components/AuthGuard'
 
@@ -26,6 +27,7 @@ export default function App() {
           <Route path="kpi" element={<KpiDashboardPage />} />
           <Route path="hotspots" element={<HotspotMapPage />} />
           <Route path="companies" element={<CompanyPerformancePage />} />
+          <Route path="companies/register" element={<CompanyRegistrationPage />} />
           <Route path="trucks" element={<CitywideTruckMapPage />} />
           <Route path="audit" element={<AuditTrailPage />} />
           <Route path="monthly-report" element={<MonthlyReportPage />} />
