@@ -1,15 +1,15 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import LoginPage from './pages/LoginPage'
+import ReportsMapPage from './pages/ReportsMapPage'
+import DashboardLayout from './components/DashboardLayout'
 import AuthGuard from './components/AuthGuard'
 
-// Placeholder for dashboard — will be replaced in US-E02+
-function DashboardPlaceholder() {
+function PlaceholderPage({ title }: { title: string }) {
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+    <div className="h-full flex items-center justify-center bg-gray-50">
       <div className="text-center">
-        <div className="text-4xl mb-4">🚛</div>
-        <h1 className="text-2xl font-bold text-gray-900">Company Dashboard</h1>
-        <p className="text-gray-500 mt-2">Reports map and fleet management coming next.</p>
+        <p className="text-2xl mb-2">🚧</p>
+        <p className="text-gray-500 text-sm">{title} — coming soon</p>
       </div>
     </div>
   )
@@ -24,10 +24,16 @@ export default function App() {
           path="/dashboard"
           element={
             <AuthGuard>
-              <DashboardPlaceholder />
+              <DashboardLayout />
             </AuthGuard>
           }
-        />
+        >
+          <Route index element={<Navigate to="reports" replace />} />
+          <Route path="reports" element={<ReportsMapPage />} />
+          <Route path="routes" element={<PlaceholderPage title="Route Optimizer" />} />
+          <Route path="fleet" element={<PlaceholderPage title="Fleet Tracking" />} />
+          <Route path="stats" element={<PlaceholderPage title="Statistics" />} />
+        </Route>
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
