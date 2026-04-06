@@ -2,10 +2,10 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import LoginPage from './pages/LoginPage'
 import ReportsMapPage from './pages/ReportsMapPage'
 import RouteOptimizerPage from './pages/RouteOptimizerPage'
+import FleetTrackingPage from './pages/FleetTrackingPage'
 import DashboardLayout from './components/DashboardLayout'
-import AuthGuard from './components/AuthGuard'
 
-function PlaceholderPage({ title }: { title: string }) {
+import AuthGuard from './components/AuthGuard'({ title }: { title: string }) {
   return (
     <div className="h-full flex items-center justify-center bg-gray-50">
       <div className="text-center">
@@ -32,7 +32,7 @@ export default function App() {
           <Route index element={<Navigate to="reports" replace />} />
           <Route path="reports" element={<ReportsMapPage />} />
           <Route path="routes" element={<RouteOptimizerPage />} />
-          <Route path="fleet" element={<PlaceholderPage title="Fleet Tracking" />} />
+          <Route path="fleet" element={<FleetTrackingPage />} />
           <Route path="stats" element={<PlaceholderPage title="Statistics" />} />
         </Route>
         <Route path="*" element={<Navigate to="/login" replace />} />
