@@ -6,6 +6,7 @@ const NAV_ITEMS = [
   { to: '/dashboard/hotspots', label: 'Waste Hotspots', icon: '🗺️' },
   { to: '/dashboard/companies', label: 'Companies', icon: '🏢' },
   { to: '/dashboard/trucks', label: 'City Trucks', icon: '🚛' },
+  { to: '/dashboard/audit', label: 'Audit Trail', icon: '📋' },
 ]
 
 function navClass(isActive: boolean) {
