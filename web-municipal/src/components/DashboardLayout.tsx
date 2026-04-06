@@ -3,6 +3,7 @@ import { useAuthStore } from '../store/authStore'
 
 const NAV_ITEMS = [
   { to: '/dashboard/kpi', label: 'KPI Dashboard', icon: '📊' },
+  { to: '/dashboard/hotspots', label: 'Waste Hotspots', icon: '🗺️' },
 ]
 
 function navClass(isActive: boolean) {
