@@ -4,19 +4,9 @@ import ReportsMapPage from './pages/ReportsMapPage'
 import RouteOptimizerPage from './pages/RouteOptimizerPage'
 import FleetTrackingPage from './pages/FleetTrackingPage'
 import DriverPage from './pages/DriverPage'
+import StatsPage from './pages/StatsPage'
 import DashboardLayout from './components/DashboardLayout'
 import AuthGuard from './components/AuthGuard'
-
-function PlaceholderPage({ title }: { title: string }) {
-  return (
-    <div className="h-full flex items-center justify-center bg-gray-50">
-      <div className="text-center">
-        <p className="text-2xl mb-2">🚧</p>
-        <p className="text-gray-500 text-sm">{title} — coming soon</p>
-      </div>
-    </div>
-  )
-}
 
 export default function App() {
   return (
@@ -36,7 +26,7 @@ export default function App() {
           <Route path="reports" element={<ReportsMapPage />} />
           <Route path="routes" element={<RouteOptimizerPage />} />
           <Route path="fleet" element={<FleetTrackingPage />} />
-          <Route path="stats" element={<PlaceholderPage title="Statistics" />} />
+          <Route path="stats" element={<StatsPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
