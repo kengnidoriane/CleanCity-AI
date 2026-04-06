@@ -4,8 +4,9 @@ import ReportsMapPage from './pages/ReportsMapPage'
 import RouteOptimizerPage from './pages/RouteOptimizerPage'
 import FleetTrackingPage from './pages/FleetTrackingPage'
 import DashboardLayout from './components/DashboardLayout'
+import AuthGuard from './components/AuthGuard'
 
-import AuthGuard from './components/AuthGuard'({ title }: { title: string }) {
+function PlaceholderPage({ title }: { title: string }) {
   return (
     <div className="h-full flex items-center justify-center bg-gray-50">
       <div className="text-center">
