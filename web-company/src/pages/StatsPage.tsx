@@ -44,12 +44,19 @@ export default function StatsPage() {
 
   useEffect(() => {
     if (!user?.id) return
-    setIsLoading(true)
-    setError(null)
-    getCompanyStats(user.id, period)
-      .then(setStats)
-      .catch(() => setError('Failed to load statistics.'))
-      .finally(() => setIsLoading(false))
+    const fetchStats = async () => {
+      setIsLoading(true)
+      setError(null)
+      try {
+        const data = await getCompanyStats(user.id, period)
+        setStats(data)
+      } catch {
+        setError('Failed to load statistics.')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    void fetchStats()
   }, [user?.id, period])
 
   return (
