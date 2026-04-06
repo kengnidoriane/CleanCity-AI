@@ -3,6 +3,7 @@ import LoginPage from './pages/LoginPage'
 import ReportsMapPage from './pages/ReportsMapPage'
 import RouteOptimizerPage from './pages/RouteOptimizerPage'
 import FleetTrackingPage from './pages/FleetTrackingPage'
+import DriverPage from './pages/DriverPage'
 import DashboardLayout from './components/DashboardLayout'
 import AuthGuard from './components/AuthGuard'
 
@@ -22,6 +23,7 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/driver/:routeId" element={<DriverPage />} />
         <Route
           path="/dashboard"
           element={

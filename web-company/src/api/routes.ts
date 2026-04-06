@@ -58,3 +58,15 @@ export async function assignRoute(routeId: string, truckId: string): Promise<Opt
   const res = await apiClient.post<OptimizedRoute>(`/api/routes/${routeId}/assign`, { truckId })
   return res.data
 }
+
+export async function getRoute(routeId: string): Promise<OptimizedRoute> {
+  const res = await apiClient.get<OptimizedRoute>(`/api/routes/${routeId}`)
+  return res.data
+}
+
+export async function completeStop(routeId: string, stopIndex: number): Promise<OptimizedRoute> {
+  const res = await apiClient.patch<OptimizedRoute>(
+    `/api/routes/${routeId}/stops/${stopIndex}/complete`
+  )
+  return res.data
+}
